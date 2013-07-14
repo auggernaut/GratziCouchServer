@@ -1,13 +1,11 @@
-GratziCouchServer
+## GratziCouchServer
 ============
 
 Backend for federated Gratzi app.
 
-<h1>Features</h1>
+## Features
 
-<ul>
-   <li>Authentication</li>
-   <li>Database and account provisioning</li>
-   <li>Messaging services</li>
-   <li>OAuth flow handling</li>
-</ul>
+   * Authentication
+   * Database and account provisioning
+   * Messaging services
+   * OAuth flow handling
