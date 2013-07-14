@@ -1,0 +1,13 @@
+{
+  "name"          : "GratziCouchServer",
+  "description"   : "Handles authentication and user account creation in gratzi couchdb instance.",
+  "url"           : "http://github.com/auggernaut/gratzicouchserver",
+  "keywords"      : ["couchdb"],
+  "author"        : "Augustin Bralley",
+  "contributors"  : [],
+  "dependencies"  : ["express", "sendgrid-web"],
+  "engines"       : { "node": "0.6.x" },
+  "lib"           : "./lib",
+  "main"          : "index",
+  "version"       : "0.1.0"
+}

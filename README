@@ -1,1 +1,13 @@
-This file was created by JetBrains WebStorm 6.0.2 for binding GitHub repository
+GratziCouchServer
+============
+
+Backend for federated Gratzi app.
+
+<h1>Features</h1>
+
+<ul>
+   <li>Authentication</li>
+   <li>Database and account provisioning</li>
+   <li>Messaging services</li>
+   <li>OAuth flow handling</li>
+</ul>
