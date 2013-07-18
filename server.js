@@ -12,11 +12,15 @@ app.use(express.bodyParser());
 var config = utils.loadConfig();
 var port = process.env.PORT || config.port || 9999;
 
+
+
 app.listen(port, null, function (err) {
    if(err)
    console.log('Error: ' + err);
    console.log('GratziCouchServer, at your service: http://localhost:' + port);
 });
+
+
 
 
 // Convenience for allowing CORS on routes - GET only
@@ -29,9 +33,30 @@ app.all('*', function (req, res, next) {
 
 
 
-app.post('/login', function(req, res){
-   console.log("/login");
-   couch.findOrCreateDB(config, req.body, function (err, db) {
+
+app.post('/lookup', function(req, res){
+   console.log("/lookup");
+
+   couch.getUserDBUrl(config, req.body.name, function (err, dburl) {
+      if(err) {
+         console.log(err);
+         res.json(err);
+      }
+      else {
+         console.log(dburl);
+         res.json(dburl);
+      }
+   });
+
+});
+
+
+
+
+app.post('/register', function(req, res){
+   console.log("/register");
+
+   couch.createUserDB(config, req.body, function (err, db) {
       if(err) {
          console.log(err);
          res.json(err);
@@ -43,6 +68,7 @@ app.post('/login', function(req, res){
 
    });
 });
+
 
 
 
