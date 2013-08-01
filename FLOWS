@@ -1,0 +1,144 @@
+Gratzi CouchDB Flows
+
+
+User loads Gratzi App
+	App checks it there is a local Gratzi PouchDB
+		If PouchDB exists,
+			App loads gratzi and profile data.
+			App displays Profile info
+		Else PouchDB doesn't exist
+			Continue
+	App checks if there is internet connection
+		If online,
+			App checks if user has cookie + userDB url
+				If cookie,
+					App attempts to sync with userDB
+						If failure, clear cookie and send user to login form with "session timed out" message
+					App displays Profile info
+				Else no cookie,
+					App displays Login
+		If offline
+			Continue
+
+User registers (username, password, email) [Persona?]
+	App submits form to Gratzi.motherNode
+		Gratzi.motherNode checks if username exists
+			If username doesn't exist
+				[Todo: verify email]
+				Creates user account
+				Creates user database
+				Adds user account to security document of user database
+				Returns url of user database
+			Else username exists
+				Return "username taken"
+	App gets response from Gratzi.motherNode
+		If response is [error, "username taken"]
+			Display message
+		Else response is [success, userNode.CouchDB.url]
+			App authenticates with userNode, stores cookie and Gratzi.userNode.CouchDB.url
+			App creates Gratzi local.PouchDB
+
+
+User logs in
+	App submits [username] form to Gratzi.motherNode
+		If username doesn't exist
+			Gratzi.motherNode returns "incorrect username/password"
+		Else
+			Gratzi.motherNode returns [Gratzi.userNode.url, Gratzi.publishNode.url, Gratzi.messageNode.url]
+			App submits [username, password] to Gratzi.userNode
+				If authenticated
+					Gratzi.userNode returns cookie
+					App syncs local PouchDB with Gratzi.userNode.CouchDB
+					App loads main view page
+				Else not authenticated
+					App displays "incorrect username/password"
+
+
+User creates grat
+	If online
+		App submits [grat] to Gratzi.publishNode                                    //Publish grat
+			Gratzi.publishNode
+				puts [grat, expiration] in Gratzi.publishNode.pubDB
+				returns [publicUrl]
+		App submits [recipient] to Gratzi.motherNode                                //Find recipient
+			Gratzi.motherNode
+				checks whether recipient is in Gratzi.motherNode._user
+ 				If _user
+					returns user notification preferences as [messageVia]
+				Else not _user
+					returns [recipient] as [messageVia]
+		App submits [messageVia, publicUrl] to Gratzi.messageNode                   //Send/save message
+			Gratzi.messageNode
+				sends notification via email, sms
+				OR
+				stores message in [messageVia.url]
+		App saves [publicUrl] in [grat] JSON
+		App stores [grat] in local.PouchDB
+		App triggers sync with Gratzi.userNode.CouchDB
+	Else offline
+		App notifies user that [grat] will be sent when online
+		App stores [grat] in local.PouchDB
+
+
+
+User creates zi
+	--Same as creating grat, expect zi also contains [grat.UUID]--
+
+
+Message format -
+{
+	id: [UUID],
+	dts: [DateTime],
+	type: "zi",
+	to: {
+		id: [UUID],
+		name: "Rick James",
+		contactVia: "rjames@gmail.com"
+	},
+	from: {
+	    id: [UUID],
+	    name: "Dave Chappell",
+	    contactVia: "dchap@gmail.com"
+	}
+	publicUrl: [publicUrl],
+	parent: [grat.UUID]
+}
+
+
+
+
+Notification Url format -
+ https://[gratziUrl]/[pubUrl]
+
+User clicks notification link of [grat] in email or sms
+	If user has mobile app installed
+		Mobile app loads [pubUrl]
+	App loads from [gratziUrl]
+	App loads [grat] from [pubUrl]
+	If user is logged in
+		If [grat] already saved to local.PouchDB
+			If [zi] exists in local.PouchDB
+				App loads [zi] from local.PouchDB
+			Else no [zi] exists
+				App shows [zi] fields
+		Else not saved
+			App saves [grat] to local.PouchDB
+			App syncs with userDB
+			App shows zi fields
+	Else user not logged in
+		Show login fields
+
+
+
+
+
+	App sends request to Gratzi.motherNode with [pubUrl]
+		Gratzi.motherNode
+			Verify gratziId (exists, not expired, not private)
+				if valid
+					retrieve gratzi from Gratzi.messagesDB
+					return gratzi JSON
+				if invalid
+					return "invalid link"
+
+

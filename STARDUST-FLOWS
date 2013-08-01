@@ -1,0 +1,167 @@
+App <-> StarSeed <-> StarDust <-> StarBurst Flows
+
+
+User loads App
+	App checks IF exists local.App.PouchDB
+		IF local.App.PouchDB exists,
+			App loads data
+			App displays Profile info
+		ELSE no local.App.PouchDB exists
+			Continue
+	App checks IF there is internet connection
+		IF online,
+			App checks IF user has [cookie]
+				IF cookie,
+					App attempts to sync with [StarDust.App.CouchDB.url]
+						IF failure
+						    clear cookie
+						    send user to login form with "session timed out" message
+					App displays Profile info
+				ELSE no cookie,
+					App displays Login
+		ELSE offline
+			Continue
+
+
+
+
+User registers
+	App submits [username, password, email] to StarSeed
+		StarSeed checks IF username exists
+			IF username doesn't exist
+				[Todo: verify email]
+				Creates user account
+				Creates user database
+				Adds user account to security document of user database
+				Returns [StarDust.url, StarDust.App.CouchDB.url]
+			ELSE username exists
+				Return "username taken"
+	App gets response from StarSeed
+		IF response is [error, "username taken"]
+			Display message
+		ELSE response is [success, StarDust.App.CouchDB.url]
+			App authenticates with StarDust.App.CouchDB
+			App stores cookie and StarDust.App.CouchDB.url
+			App creates local.App.PouchDB
+
+
+
+
+User logs in
+	App submits [username] to StarSeed
+		IF username doesn't exist
+			StarSeed returns "incorrect username/password"
+		ELSE
+			StarSeed returns [StarDust.url, StarBurst.url]
+	        App submits [username, password] to StarDust
+				IF authenticated
+					StarDust returns cookie
+					App syncs local.App.PouchDB <-> StarDust.App.CouchDB
+					App checks StarDust.App.inbox for new bursts
+					    IF new bursts
+					        App downloads [dust] linked from each [burst]
+					        App saves [dust] to local.App.PouchDB
+					        App syncs local.App.PouchDB <-> StarDust.App.CouchDB
+					App loads main view page
+				ELSE not authenticated
+					App displays "incorrect username/password"
+
+
+
+
+User creates [dust]
+	IF online
+		App stores [dust] in local.App.PouchDB
+		App syncs local.App.PouchDB <-> StarDust.App.CouchDB
+	ELSE offline
+		App notIFies user that [dust] will be synced when online
+		App stores [dust] in local.App.PouchDB
+
+
+
+
+User shares [dust]
+	IF online
+		App submits [recipient] to StarSeed                               //Recipient may or may not be a StarSeed._user
+			StarSeed
+				checks whether recipient is in StarSeed._user
+ 				IF _user
+					returns user notification preferences as [burstVia]
+				ELSE not _user
+					returns [recipient] as [burstVia]
+		App submits [dustID, burstVia] to StarDust                       //Get dustUrl from sender's StarDust
+            StarDust returns [dustUrl]
+		App submits [burstVia, dustUrl] to StarBurst                     //Send a burst to recipient
+			StarBurst
+				sends [shareUrl] via email, sms                          //recipient not a StarSeed._user
+				OR
+				sends [burst] to recipient's StarDust.App.inbox          //burstVia contains ref to user.StarDust.App.inbox
+	ELSE offline
+		App notifies user that [dust] will be sent when online
+		App stores [dust] in local.App.outbox
+
+
+
+
+[shareUrl] format -
+    https://[appUrl]/[dustUrl]
+
+User clicks notification link in email or sms
+	IF user has mobile app installed
+		Mobile app loads [dustUrl]
+	ELSE
+	    App loads in mobile browser from [appUrl]
+	App loads [dust] from [dustUrl]
+	IF [dust] not already saved to local.PouchDB
+        App saves [dust] to local.PouchDB
+	IF user logged in
+		App syncs local.App.PouchDB <-> StarDust.App.CouchDB
+	ELSE user not logged in
+		Show login fields
+
+
+User clicks in-app notification
+
+
+
+
+
+
+
+Dust example -
+{
+	id: [UUID],
+	dts: [DateTime],
+	type: "zi",
+	to: {
+		id: [UUID],
+		name: "Rick James",
+		contactVia: "rjames@gmail.com"
+	},
+	from: {
+	    id: [UUID],
+	    name: "Dave Chappell",
+	    contactVia: "dchap@gmail.com"
+	},
+	parent: [dust.UUID],
+	message: "Cocaine is a hell of a drug.",
+	video: "http://filepicker.io/34jscnas3"
+}
+
+
+
+
+Burst example -
+{
+    id: [UUID],
+    dts: [DateTime],
+    type: "burst",
+    from: {
+        id: [UUID],
+        name: "Dave Chappell",
+        contactVia: "dchap@gmail.com"
+    },
+    dustUrl: [dustUrl],
+    expiration: [DateTime]
+}
+
